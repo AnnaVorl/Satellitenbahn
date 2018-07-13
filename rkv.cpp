@@ -22,7 +22,8 @@ double rk4_dn1(double(*)(double, double [], double [], int ),
                double, double, double [], double [], int);
 
 /* global variables */
-const double G = 6.67*pow(10, -11);               // Gravitationskonstante
+
+const double G = 6.67*pow(10, -11);             // Gravitationskonstante
 const double m = 455000;                		// Masse ISS
 const double M = 5.97*pow(10, 24);				//Masse Erde
 const double c_w = 0.6;							//Widerstandsbeiwert
@@ -30,25 +31,23 @@ const double A = 2667.78;						//Querschnittsfläche ISS
 const double rho = 1.77*pow(10, -22);			//Dichte der Atmosphäre (Geschätzter Wert!!!!!!!!!)
 const double R = 6371000;						//Radius Erde
 
-const double g = 9.81;
 
 const double rad = 3.1415926/180.0;  // radians
-
-
 
 
 int main()
 {
     const int n=4;                   // number of first-order equations
     double ti, tf, dt, tmax;
-    double ri[n], rf[n];		//Array -> hier zweidimensionales Array mit zwei Koordinaten?!?
-    double w0, phi0;
-    int i;						// , key; ????
+    double ri[n], rf[n];		//Array
+    double v0, phi0;
+    double phi;
+    int i;						// , key;
 
 
 /* output: file and formats */
     ofstream file;
-    file.open ("table01c.dat");         // write results to this file
+    file.open ("table01c.dat");         // Ergebnisse werden in dieses File geschrieben
 /* output format */
     file.precision(3);
     file.setf(ios::scientific | ios::showpoint);
@@ -58,23 +57,21 @@ int main()
 
 
 
-// Muss noch geändert werden!!!!!!!!!:
-
 /* initial information */
     ti = 0.0;                // initial value for variable t
-    w0 = 7660;             	 // Winkelgeschwindigkeit (m/s)
+    v0 = 7666.67;             	 // Geschwindigkeit (m/s)
     phi0 =  0.0;             // initial angle (degrees)
-    ri[0] = 408000+R;        // Anfangsradius r (m)
-    ri[1] = 0.0;             // Anfangswinkel phi (degree)
-    ri[2] = w0*cos(phi0*rad);  // Geschwindigkeit (m.s)					//??????????????????
-    ri[3] = w0*sin(phi0*rad);  // Winkelgeschwindigkeit (m/s)			//??????????????????
+    ri[0] = 408000+R;        // Anfangsposition in x (m)
+    ri[1] = 0.0;             // Anfangsposition in y (m)
+    ri[2] = 0.0; 			  // Geschwindigkeit in x-Richtung (m.s)
+    ri[3] = v0; 				  // Geschwindigkeit in y-Richtung  (m/s)
 
-    dt = 0.2;             // step size for integration (s)
-    tmax = 1700;          // integrate till tmax (s)
+    dt = 10;             // step size for integration (s)
+    tmax = 170000;          // integrate till tmax (s)
 /* end of initial information */
 
-    file << setw(12) << "t"  << setw(12) << "r"   << setw(12) << "phi"
-         << setw(12) << "r'" << setw(12) << "phi'"  << endl;
+    file << setw(12) << "t"  << setw(12) << "x"   << setw(12) << "y"
+         << setw(12) << "x'" << setw(12) << "y'"  << endl;
 
 /* integration of ODE */
     while (ti <= tmax)
@@ -83,7 +80,7 @@ int main()
      file << setw(12) << ti   << setw(12) << ri[0] << setw(12) << ri[1]
           << setw(12) << ri[2]<< setw(12) << ri[3] << endl;
 
-     if (ri[1] < 400000+R) break;     // Bei einer Höhe von 400000 m stoppen
+     //if (sqrt(pow(ri[0], 2)+pow(ri[1],2)) < R) break;
 
      tf = ti + dt;
 /*=================================*/
@@ -98,7 +95,7 @@ int main()
         }
    }
 
-    // system ("read"); 			//Änderung vorgenommen!!!!!!!!
+    // system ("read");
 
 
 
@@ -136,8 +133,8 @@ int main()
     dr[0] = r[2];
     dr[1] = r[3];
 /* second order */
-    dr[2] = 0.0;				//zweite Ableitungen (r und phi)
-    dr[3] = (-1.0)*g;
+    dr[2] = (-G*M/(pow(r[0],2)+pow(r[2],2)))*cos((atan(r[1]/r[0])*rad))-(1/2)*(c_w/m)*A*rho*pow(r[3]*cos((atan(r[1]/r[0]))*rad), 2);				//zweite Ableitungen (r und phi)
+    dr[3] = (-G*M/(pow(r[0],2)+pow(r[2],2)))*sin((atan(r[1]/r[0])*rad))-(1/2)*(c_w/m)*A*rho*pow(r[1]*sin((atan(r[1]/r[0]))*rad), 2);
 
     return 0;
 }
@@ -198,4 +195,10 @@ double rk4_dn1(double(dnx)(double, double [], double [], int),
           rf[j] = ri[j] + k1[j]/6.0+k2[j]/3.0+k3[j]/3.0+k4[j]/6.0;
         }
     return 0.0;
+
+    system ("gnuplot Plot.gp");
 }
+
+
+
+
